@@ -7,6 +7,12 @@ require("dotenv").config();
 
 const authRouter = express.Router();
 
+/*
+1.	User Registration - POST /api/auth/register
+○	Request Body: { username, email, password }
+○	Response: { success: true, message: 'User registered successfully', userId }
+*/
+
 authRouter.post("/register", async(req, res)=>{
     const {username, email, password} = req.body;
     
@@ -32,6 +38,12 @@ authRouter.post("/register", async(req, res)=>{
     }
 })
 
+/*
+2.	User Login - POST /api/auth/login
+○	Request Body: { email, password }
+○	Response: { token, user: { id, username, email } }
+*/
+
 authRouter.post("/login", async(req, res)=>{
     const {email, password} = req.body;
     try {
@@ -56,30 +68,3 @@ module.exports = {
 }
 
 
-/*
-
-const express = require('express');
-const bcrypt = require('bcrypt');
-const User = require('../models/User');
-const jwt = require('jsonwebtoken');
-const router = express.Router();
-
-router.post('/register', async (req, res) => {
-  try {
-    const { username, email, password } = req.body;
-    const hashedPassword = await bcrypt.hash(password, 10);
-
-    const newUser = new User({ username, email, password: hashedPassword });
-    const user = await newUser.save();
-
-    res.status(201).json({ success: true, message: 'User registered successfully', userId: user._id });
-  } catch (error) {
-    res.status(500).json({ success: false, message: 'Error registering user' });
-  }
-});
-
-module.exports = router;
-
-
-
-*/

@@ -26,6 +26,11 @@ Comment_Router.post('/:postId/comments', authenticator, async (req, res) => {
         });
 
         const comment = await newComment.save();
+
+        // Add comment ID to the post's comments array
+        post.comments.push(comment._id);
+        await post.save();
+        
         res.status(200).send({ success: true, commentId: comment.id, message: 'Comment added successfully' });
     } catch (error) {
         console.error(error.message);

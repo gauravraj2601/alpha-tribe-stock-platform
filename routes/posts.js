@@ -157,7 +157,6 @@ Post_Router.post('/:postId/like', authenticator, async (req, res) => {
 2.	Unlike a Post - DELETE /api/posts/:postId/like
 ○	Headers: { Authorization: Bearer <token> }
 ○	Response: { success: true, message: 'Post unliked' }
-
 */
 
 Post_Router.delete('/:postId/like', authenticator, async (req, res) => {
