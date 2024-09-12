@@ -22,13 +22,11 @@ Post_Router.post("/", authenticator, async (req, res) => {
       tags,
     });
     const post = await newPost.save();
-    res
-      .status(200)
-      .send({
-        success: true,
-        postId: post.id,
-        message: "Post created successfully",
-      });
+    res.status(200).send({
+      success: true,
+      postId: post.id,
+      message: "Post created successfully",
+    });
   } catch (error) {
     console.error(error.message);
     res.status(500).send({ "Server Error": error.message });
@@ -45,7 +43,8 @@ Post_Router.post("/", authenticator, async (req, res) => {
 */
 
 Post_Router.get("/", async (req, res) => {
-  const { stockSymbol, tags, sortBy } = req.query;
+  const { stockSymbol, tags, sortBy, page = 1, limit = 10 } = req.query;
+
   try {
     let query = {};
     if (stockSymbol) query.stockSymbol = stockSymbol;
@@ -55,15 +54,41 @@ Post_Router.get("/", async (req, res) => {
     if (sortBy === "date") sort.createdAt = -1;
     if (sortBy === "likes") sort.likes = -1;
 
+    // Pagination
+    const pageNumber = parseInt(page);
+    const limitNumber = parseInt(limit);
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const totalPosts = await Post_Model.countDocuments(query);
+
+    // posts with sorting, filtering, and pagination
     const posts = await Post_Model.find(query)
       .sort(sort)
-      .select("stockSymbol title description likes createdAt ");
+      .select("stockSymbol title description likes createdAt ")
+      .limit(limitNumber)
+      .skip(skip);
 
-    res
-      .status(200)
-      .send({
-        posts
-      });
+    // Pagination metadata
+    const pagination = {
+      currentPage: pageNumber,
+      totalPages: Math.ceil(totalPosts / limitNumber),
+      totalPosts,
+    };
+
+     // Format response: include likesCount
+     const formattedPosts = posts.map(post => ({
+        postId: post._id,
+        stockSymbol: post.stockSymbol,
+        title: post.title,
+        description: post.description,
+        likesCount: post.likes.length,  // Adding likes count here
+        createdAt: post.createdAt
+      }));
+
+    res.status(200).send({
+      pagination,
+      posts: formattedPosts,
+    });
   } catch (error) {
     console.error(error.message);
     res.status(500).send({ "Server Error": error.message });
@@ -75,24 +100,24 @@ Post_Router.get("/", async (req, res) => {
 ○	Response: { postId, stockSymbol, title, description, likesCount, comments: [ { commentId, userId, comment, createdAt } ] }
 */
 
-Post_Router.get('/:postId', async (req, res) => {
-    try {
-        const post = await Post_Model.findById(req.params.postId)
-            .populate('user', 'username')
-            .populate({
-                path: 'comments',
-                populate: { path: 'user', select: 'username' }
-            });
+Post_Router.get("/:postId", async (req, res) => {
+  try {
+    const post = await Post_Model.findById(req.params.postId)
+      .populate("user", "username")
+      .populate({
+        path: "comments",
+        populate: { path: "user", select: "username" },
+      });
 
-        if (!post) {
-            return res.status(404).send({ msg: 'Post not found' });
-        }
-
-        res.status(200).send(post);
-    } catch (error) {
-        console.error(error.message);
-    res.status(500).send({ "Server Error": error.message });
+    if (!post) {
+      return res.status(404).send({ msg: "Post not found" });
     }
+
+    res.status(200).send(post);
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ "Server Error": error.message });
+  }
 });
 
 module.exports = { Post_Router };
@@ -102,24 +127,26 @@ module.exports = { Post_Router };
 ○	Headers: { Authorization: Bearer <token> }
 ○	Response: { success: true, message: 'Post deleted successfully' }
 */
-Post_Router.delete('/:postId', authenticator, async (req, res) => {
-    try {
-        const post = await Post_Model.findById(req.params.postId);
-        if (!post) {
-            return res.status(404).send({ msg: 'Post not found' });
-        }
+Post_Router.delete("/:postId", authenticator, async (req, res) => {
+  try {
+    const post = await Post_Model.findById(req.params.postId);
+    if (!post) {
+      return res.status(404).send({ msg: "Post not found" });
+    }
 
     // Checking if the logged-in user is the one who created the post
-        if (post.user.toString() !== req.user.id) {
-            return res.status(401).send({ msg: 'User not authorized' });
-        }
-
-        await Post_Model.findByIdAndDelete(req.params.postId);
-        res.status(200).send({ success: true, message: 'Post deleted successfully' });
-    } catch (error) {
-        console.error(error.message);
-    res.status(500).send({ "Server Error": error.message });
+    if (post.user.toString() !== req.user.id) {
+      return res.status(401).send({ msg: "User not authorized" });
     }
+
+    await Post_Model.findByIdAndDelete(req.params.postId);
+    res
+      .status(200)
+      .send({ success: true, message: "Post deleted successfully" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ "Server Error": error.message });
+  }
 });
 
 /*
@@ -129,29 +156,28 @@ Like System:
 ○	Response: { success: true, message: 'Post liked' }
 */
 
-Post_Router.post('/:postId/like', authenticator, async (req, res) => {
-    try {
-        const post = await Post_Model.findById(req.params.postId);
+Post_Router.post("/:postId/like", authenticator, async (req, res) => {
+  try {
+    const post = await Post_Model.findById(req.params.postId);
 
-        if (!post) {
-            return res.status(404).send({ msg: 'Post not found' });
-        }
-
-            // Checking if the user has already liked the post
-        if (post.likes.includes(req.user.id)) {
-            return res.status(400).send({ msg: 'Post already liked' });
-        }
-         // adding like to the beginning of the likes array 
-        post.likes.unshift(req.user.id);
-        await post.save();
-
-        res.status(200).send({ success: true, message: 'Post liked' });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send({ "Server Error": error.message });
+    if (!post) {
+      return res.status(404).send({ msg: "Post not found" });
     }
-});
 
+    // Checking if the user has already liked the post
+    if (post.likes.includes(req.user.id)) {
+      return res.status(400).send({ msg: "Post already liked" });
+    }
+    // adding like to the beginning of the likes array
+    post.likes.unshift(req.user.id);
+    await post.save();
+
+    res.status(200).send({ success: true, message: "Post liked" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ "Server Error": error.message });
+  }
+});
 
 /*
 2.	Unlike a Post - DELETE /api/posts/:postId/like
@@ -159,24 +185,34 @@ Post_Router.post('/:postId/like', authenticator, async (req, res) => {
 ○	Response: { success: true, message: 'Post unliked' }
 */
 
-Post_Router.delete('/:postId/like', authenticator, async (req, res) => {
-    try {
-        const post = await Post_Model.findById(req.params.postId);
+Post_Router.delete("/:postId/like", authenticator, async (req, res) => {
+  try {
+    const post = await Post_Model.findById(req.params.postId);
 
-        if (!post) {
-            return res.status(404).send({ msg: 'Post not found' });
-        }
-
-        if (!post.likes.includes(req.user.id)) {
-            return res.status(400).send({ msg: 'Post has not yet been liked' });
-        }
-
-        post.likes = post.likes.filter(like => like.toString() !== req.user.id);
-        await post.save();
-
-        res.status(200).send({ success: true, message: 'Post unliked' });
-    } catch (error) {
-        console.error(error.message);
-        res.status(500).send({ "Server Error": error.message });
+    if (!post) {
+      return res.status(404).send({ msg: "Post not found" });
     }
+
+    if (!post.likes.includes(req.user.id)) {
+      return res.status(400).send({ msg: "Post has not yet been liked" });
+    }
+
+    post.likes = post.likes.filter((like) => like.toString() !== req.user.id);
+    await post.save();
+
+    res.status(200).send({ success: true, message: "Post unliked" });
+  } catch (error) {
+    console.error(error.message);
+    res.status(500).send({ "Server Error": error.message });
+  }
 });
+
+/*
+Optional
+1.	Paginated Posts Retrieval - GET /api/posts
+○	Query Parameters:
+■	page (optional, default: 1)
+■	limit (optional, default: 10)
+○	Response: [ { postId, stockSymbol, title, description, likesCount, createdAt } ] with pagination metadata.
+
+*/
