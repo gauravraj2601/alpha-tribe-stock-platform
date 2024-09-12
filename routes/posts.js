@@ -40,6 +40,14 @@ Post_Router.post("/", authenticator, async (req, res) => {
 ■	tags (optional)
 ■	sortBy (date or likes, optional)
 ○	Response: [ { postId, stockSymbol, title, description, likesCount, createdAt } ]
+
+Optional
+1.	Paginated Posts Retrieval - GET /api/posts
+○	Query Parameters:
+■	page (optional, default: 1)
+■	limit (optional, default: 10)
+○	Response: [ { postId, stockSymbol, title, description, likesCount, createdAt } ] with pagination metadata.
+
 */
 
 Post_Router.get("/", async (req, res) => {
@@ -207,12 +215,4 @@ Post_Router.delete("/:postId/like", authenticator, async (req, res) => {
   }
 });
 
-/*
-Optional
-1.	Paginated Posts Retrieval - GET /api/posts
-○	Query Parameters:
-■	page (optional, default: 1)
-■	limit (optional, default: 10)
-○	Response: [ { postId, stockSymbol, title, description, likesCount, createdAt } ] with pagination metadata.
 
-*/
