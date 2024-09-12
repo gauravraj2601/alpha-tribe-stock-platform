@@ -12,7 +12,49 @@ const authRouter = express.Router();
 ○	Request Body: { username, email, password }
 ○	Response: { success: true, message: 'User registered successfully', userId }
 */
-
+/**
+ * @swagger
+ * /api/auth/register:
+ *   post:
+ *     summary: Register a new user
+ *     tags: [Auth] 
+ *     description: This endpoint allows users to register by providing necessary details like username, email, password, and other optional information.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - username
+ *               - email
+ *               - password
+ *             properties:
+ *               username:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 userId:
+ *                   type: string
+ *       400:
+ *         description: User already exists
+ *       500:
+ *         description: Server error
+ */
 authRouter.post("/register", async(req, res)=>{
     const {username, email, password} = req.body;
     
@@ -30,7 +72,7 @@ authRouter.post("/register", async(req, res)=>{
         user.password = await bcrypt.hash(password, salt);
 
         await user.save();
-        res.status(201).send({ success: true, message: 'User registered successfully', registeredUser: user });
+        res.status(200).send({ success: true, message: 'User registered successfully', userId: user._id });
 
     } catch (error) {
         res.status(500).send({ success: false, message: 'Error registering user' });
@@ -43,6 +85,56 @@ authRouter.post("/register", async(req, res)=>{
 ○	Request Body: { email, password }
 ○	Response: { token, user: { id, username, email } }
 */
+
+
+/**
+ * @openapi
+ * /api/auth/login:
+ *   post:
+ *     summary: User login
+ *     tags: [Auth]
+ *     description: Authenticate a user and return a token.
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Successful login
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     username:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *       401:
+ *         description: Invalid credentials
+ *       404:
+ *         description: User not found
+ *       500:
+ *         description: Server error
+ */
+
 
 authRouter.post("/login", async(req, res)=>{
     const {email, password} = req.body;
