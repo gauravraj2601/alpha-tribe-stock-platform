@@ -4,6 +4,7 @@ This is the backend service for a community platform where users can discuss var
 ### Deployment
 - Deployed on Render - Deployed Backend Link https://alpha-tribe-stock-platform.onrender.com
 - API documentation is generated using Swagger - Access the documentation at https://alpha-tribe-stock-platform.onrender.com/api-docs/
+  - ( Note: The backend is deployed on Render's free tier, so it might take a few seconds for the live server to start when you first access the link. )
 ## Features
 
 - **User Authentication (JWT-based)**
