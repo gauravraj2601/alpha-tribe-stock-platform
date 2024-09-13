@@ -102,15 +102,13 @@ Optional
 ■	limit (optional, default: 10)
 ○	Response: [ { postId, stockSymbol, title, description, likesCount, createdAt } ] with pagination metadata.
 */
-
 /**
- * @openapi
+ * @swagger
  * /api/posts:
  *   get:
- *     summary: Get all stock posts
- *     description: Retrieve a list of stock posts with optional filters and pagination.
+ *     summary: Get all posts
  *     tags: [Posts]
- *     parameters:
+*     parameters:
  *       - name: stockSymbol
  *         in: query
  *         description: Filter posts by stock symbol
@@ -123,7 +121,6 @@ Optional
  *         required: false
  *         schema:
  *           type: string
- *           example: tag1,tag2
  *       - name: sortBy
  *         in: query
  *         description: Sort posts by date or likes
@@ -149,39 +146,27 @@ Optional
  *           example: 10
  *     responses:
  *       200:
- *         description: List of stock posts
+ *         description: List of posts
  *         content:
  *           application/json:
  *             schema:
- *               type: object
- *               properties:
- *                 pagination:
- *                   type: object
- *                   properties:
- *                     currentPage:
- *                       type: integer
- *                     totalPages:
- *                       type: integer
- *                     totalPosts:
- *                       type: integer
- *                 posts:
- *                   type: array
- *                   items:
- *                     type: object
- *                     properties:
- *                       postId:
- *                         type: string
- *                       stockSymbol:
- *                         type: string
- *                       title:
- *                         type: string
- *                       description:
- *                         type: string
- *                       likesCount:
- *                         type: integer
- *                       createdAt:
- *                         type: string
- *                         format: date-time
+ *               type: array
+ *               items:
+ *                 type: object
+ *                 properties:
+ *                   stockSymbol:
+ *                     type: string
+ *                   title:
+ *                     type: string
+ *                   description:
+ *                     type: string
+ *                   likes:
+ *                     type: array
+ *                     items:
+ *                       type: string
+ *                   createdAt:
+ *                     type: string
+ *                     format: date-time
  *       500:
  *         description: Server error
  */
@@ -458,7 +443,7 @@ Post_Router.post("/:postId/like", authenticator, async (req, res) => {
 
 /**
  * @openapi
- * /posts/{postId}/like:
+ * /api/posts/{postId}/like:
  *   delete:
  *     summary: Unlike a post
  *     description: Remove a like from a post by its ID.

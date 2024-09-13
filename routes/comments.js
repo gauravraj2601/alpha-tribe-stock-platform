@@ -37,7 +37,7 @@ const Comment_Router = express.Router();
  *           schema:
  *             type: object
  *             properties:
- *               content:
+ *               comment:
  *                 type: string
  *     responses:
  *       200:
