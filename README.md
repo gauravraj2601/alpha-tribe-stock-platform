@@ -1,8 +1,9 @@
-*** 
 # Alpha Tribe Stock Discussion  Platform Backend
 
 This is the backend service for a community platform where users can discuss various stocks in the market. The backend focuses on user authentication, stock post management, a commenting system, likes, and more. It is built using the MERN stack (MongoDB, Express.js, Node.js).
-
+### Deployment
+- Deployed on Render - Deployed Backend Link https://alpha-tribe-stock-platform.onrender.com
+- API documentation is generated using Swagger - Access the documentation at https://alpha-tribe-stock-platform.onrender.com/api-docs/
 ## Features
 
 - **User Authentication (JWT-based)**
