@@ -26,9 +26,14 @@ const swaggerOptions = {
         description: 'API documentation for the Stock Social Platform',
       },
       servers: [
-        {
-          url: 'http://localhost:8080',
-        },
+          {
+              url: 'https://alpha-tribe-stock-platform.onrender.com',
+              description: 'Production Server (Render)'
+            },
+            {
+              url: 'http://localhost:8080',
+              description: 'Local Development Server'
+            },
       ],
     components: {
       securitySchemes: {
